@@ -1,7 +1,8 @@
 import pandas as pd
+import numpy as np
 
 from sklearn.ensemble import GradientBoostingRegressor
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, cross_validate
 from sklearn.model_selection import GridSearchCV
 from sklearn.metrics import r2_score
 
@@ -15,20 +16,22 @@ if __name__ == '__main__':
     
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=3)
 
-    params = {
-        'kernel' : ['linear', 'rbf']
-    }
+    reg = GradientBoostingRegressor()
+    results = cross_validate(
+        reg, 
+        X_train, 
+        y_train, 
+        cv=5, 
+        scoring='r2', 
+        return_train_score=True
+    )    
     
-    reg = GradientBoostingRegressor().fit(X_train,y_train)
-    #gsearch = GridSearchCV(reg, param_grid=params, scoring='r2', cv=5)
-    #gsearch.fit(X_train, y_train)
+    train_scores = results['train_score']
+    test_scores = results['test_score']
 
-    #print(gsearch.best_score_)
-    #print(gsearch.best_estimator_)
-    
-    
-    y_pred = reg.predict(X_test)
-    score_t = r2_score(y_test, y_pred)
+    print('CVTrain: ', np.mean(train_scores))
+    print('CVTest: ', np.mean(test_scores))
 
-    print(reg.score(X_test,y_test))
-    print(score_t)
+    reg.fit(X_train, y_train)
+    print('Test: ', reg.score(X_test, y_test))
+    
